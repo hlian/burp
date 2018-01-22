@@ -2,7 +2,7 @@
 
 // @flow
 
-import dotenv from 'dotenv-safe';
+import dotenv from 'dotenv';
 import Nightmare from 'nightmare';
 import fs from 'mz/fs';
 import prompt from 'password-prompt';
@@ -66,13 +66,13 @@ const init = async function() {
 }
 
 const main = () => {
-  yargs.command('init', 'run this once in a directory you like', () => {}, () => {
-    init()
-  }).argv
-
-  yargs.command('list', 'list open timesheets', () => {}, () => {
-    setup(listTimesheets).then(() => {}).catch(console.error)
-  }).argv
+  yargs.command('$0', 'an OpenAir domain-specific language', () => {}, () => {
+    console.log('try the help command')
+  }).command(
+    'init', 'run this once in a directory you like', () => {}, init
+  ).command(
+    'list', 'list open timesheets', () => {}, () => setup(listTimesheets).then(() => {}).catch(console.error)
+  ).help().argv
 }
 
 main()
