@@ -6,5 +6,9 @@
   },
   "rules": {
     "flowtype-errors/show-errors": 2
+  },
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
   }
 }
