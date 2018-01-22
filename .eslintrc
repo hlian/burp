@@ -1,0 +1,10 @@
+{
+  "parser": "babel-eslint",
+  "plugins": ["flowtype", "flowtype-errors"],
+  "globals": {
+    "Generator": true
+  },
+  "rules": {
+    "flowtype-errors/show-errors": 2
+  }
+}
