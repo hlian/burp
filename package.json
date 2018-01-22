@@ -1,6 +1,6 @@
 {
   "name": "burp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "an openair domain-specific language",
   "bin": "dist/main.js",
   "repository": "https://github.com/hlian/burp",
@@ -13,11 +13,16 @@
     "babel-preset-env": "1.6.1",
     "babel-preset-es2017": "6.24.1",
     "babel-preset-flow": "6.23.0",
+    "dotenv-safe": "4.0.4",
     "eslint": "4.16.0",
     "eslint-plugin-flowtype": "2.29.1",
     "eslint-plugin-flowtype-errors": "3.3.7",
     "flow-bin": "0.63.1",
-    "nightmare": "2.10.0"
+    "mz": "2.7.0",
+    "nightmare": "2.10.0",
+    "password-prompt": "1.0.4",
+    "tty-table": "2.5.5",
+    "yargs": "10.1.1"
   },
   "devDependencies": {
     "babel-cli": "6.26.0"

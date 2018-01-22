@@ -2,7 +2,14 @@
 
 // @flow
 
+import dotenv from 'dotenv-safe';
 import Nightmare from 'nightmare';
+import fs from 'mz/fs';
+import prompt from 'password-prompt';
+import yargs from 'yargs';
+
+import { formatTimesheets } from './util';
+import { Timesheet } from './types';
 
 const AUTH_URL = 'https://www.openair.com/index.pl';
 
@@ -24,21 +31,48 @@ const listTimesheets = async function(nightmare: Nightmare) {
     .wait('.nav_active a[href*="open"]')
     .click('.nav_active a[href*="open"]')
     .wait('.active a[href*="open"]')
-    .evaluate(() =>
-      Array.from(document.querySelectorAll('tbody [name="rowWithAnchors"].listLight')).map(row =>
-        Array.from(row.children).map(y => y.textContent)
-      )
+    .evaluate((): Timesheet[] =>
+      Array.from(document.querySelectorAll('tbody [name="rowWithAnchors"].listLight')).map(row => {
+        const [,, start, name, user, hours, ...rest] = Array.from(row.children).map(x => x.textContent.trim())
+        return { start, name, user, hours };
+      })
     )
-    .then(console.log)
+    .then(data => {
+      console.log(formatTimesheets(data));
+    })
 }
 
-const main = async function() {
-  const nightmare = Nightmare({ show: true, typeInterval: 10 })
-  await auth(nightmare, 'Originate', 'hao.lian', 'bK67CTg5zh3quRD49z')
-  await listTimesheets(nightmare)
-  const url = await nightmare.url()
-  console.error('whoa', url)
-  return url
+const setup = async function(callback) {
+  dotenv.load()
+
+  const nightmare = Nightmare({ show: process.env.BURP_SHOW || false })
+
+  if (!process.env.BURP_USER) {
+    throw new Error('setup: no "USERNAME" found in process env')
+  }
+  if (!process.env.BURP_PASS) {
+    throw new Error('setup: no "PASSWORD" found in process env')
+  }
+
+  await auth(nightmare, process.env.BURP_COMPANY || 'Originate', process.env.BURP_USER, process.env.BURP_PASS)
+  await callback(nightmare)
+  await nightmare.end()
 }
 
-main().then(x => console.log('main', x)).catch(e => console.error('main', e))
+const init = async function() {
+  const username = await prompt('OpenAir username: ')
+  const password = await prompt('OpenAir password: ')
+  await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`].join("\n"))
+}
+
+const main = () => {
+  yargs.command('init', 'run this once in a directory you like', () => {}, () => {
+    init()
+  }).argv
+
+  yargs.command('list', 'list open timesheets', () => {}, () => {
+    setup(listTimesheets).then(() => {}).catch(console.error)
+  }).argv
+}
+
+main()
