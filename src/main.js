@@ -2,15 +2,15 @@
 
 // @flow
 
-import dotenv from 'dotenv';
-import inquirer from 'inquirer';
-import Nightmare from 'nightmare';
-import fs from 'mz/fs';
-import yargs from 'yargs';
+import dotenv from 'dotenv'
+import inquirer from 'inquirer'
+import Nightmare from 'nightmare'
+import fs from 'mz/fs'
+import yargs from 'yargs'
 
-import { formatTimesheets, formatTimes } from './util';
-import { Timesheet } from './types';
-import * as robot from './robot';
+import { formatTimesheets, formatTimes } from './util'
+import { Timesheet } from './types'
+import * as robot from './robot'
 
 const setup = async function(callback) {
   dotenv.load()
@@ -35,13 +35,13 @@ const Commands = {
       { type: 'input', message: 'OpenAir username', name: 'username' },
       { type: 'password', message: 'OpenAir password', name: 'password' },
     ])
-    return await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`, ''].join("\n"))
+    return await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`, ''].join('\n'))
   },
 
   list: async function() {
     return await setup(async function(nightmare: Nightmare) {
-      const timesheets = await robot.timesheets(nightmare);
-      console.log(formatTimesheets(timesheets));
+      const timesheets = await robot.timesheets(nightmare)
+      console.log(formatTimesheets(timesheets))
     })
   },
 
@@ -68,23 +68,29 @@ const Commands = {
         }
       }
     }
-  }
+  },
 }
 
-const runCommand = (command) => {
-  command().then(() => {}).catch(console.error)
-};
+const runCommand = command => {
+  command()
+    .then(() => {})
+    .catch(console.error)
+}
 
 const main = () => {
-  yargs.command('$0', 'an OpenAir domain-specific language', () => {}, () => {
-    console.log('try the help command')
-  }).command(
-    'init', 'run this once in a directory you like', () => {}, () => runCommand(Commands.init)
-  ).command(
-    'list', 'list open timesheets', () => {}, () => runCommand(Commands.list)
-  ).command(
-    'repl', 'read! evaluate! print! uh... what was that last one', () => {}, () => runCommand(Commands.repl)
-  ).help().argv
+  yargs
+    .command(
+      '$0',
+      'an OpenAir domain-specific language',
+      () => {},
+      () => {
+        console.log('try the help command')
+      }
+    )
+    .command('init', 'run this once in a directory you like', () => {}, () => runCommand(Commands.init))
+    .command('list', 'list open timesheets', () => {}, () => runCommand(Commands.list))
+    .command('repl', 'read! evaluate! print! uh... what was that last one', () => {}, () => runCommand(Commands.repl))
+    .help().argv
 }
 
 main()

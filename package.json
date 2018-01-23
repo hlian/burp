@@ -21,6 +21,7 @@
     "inquirer": "5.0.1",
     "mz": "2.7.0",
     "nightmare": "2.10.0",
+    "prettier": "1.10.2",
     "tty-table": "2.5.5",
     "yargs": "10.1.1"
   },
