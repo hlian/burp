@@ -3,9 +3,9 @@
 // @flow
 
 import dotenv from 'dotenv';
+import inquirer from 'inquirer';
 import Nightmare from 'nightmare';
 import fs from 'mz/fs';
-import prompt from 'password-prompt';
 import yargs from 'yargs';
 
 import { formatTimesheets } from './util';
@@ -13,7 +13,7 @@ import { Timesheet } from './types';
 
 const AUTH_URL = 'https://www.openair.com/index.pl';
 
-const auth = async function(nightmare: Nightmare, company: string, user: string, pass: string) {
+const auth = async function(nightmare: Nightmare, company: string, user: string, pass: string): Promise<void> {
   await nightmare
     .goto(AUTH_URL)
     .wait('#input_company')
@@ -21,12 +21,13 @@ const auth = async function(nightmare: Nightmare, company: string, user: string,
     .insert('#input_user', user)
     .insert('#input_password', pass)
     .click('#oa_comp_login_submit')
-    .wait('body.dashboard')
-    .title()
+  console.log('auth: logging in')
+  await nightmare.wait('body.dashboard')
+  console.log('auth: logged in')
 }
 
-const listTimesheets = async function(nightmare: Nightmare) {
-  await nightmare
+const listTimesheets = async function(nightmare: Nightmare): Promise<Timesheet[]> {
+  return await nightmare
     .click('.nav_modules a[href*="ta"]')
     .wait('.nav_active a[href*="open"]')
     .click('.nav_active a[href*="open"]')
@@ -37,9 +38,6 @@ const listTimesheets = async function(nightmare: Nightmare) {
         return { start, name, user, hours };
       })
     )
-    .then(data => {
-      console.log(formatTimesheets(data));
-    })
 }
 
 const setup = async function(callback) {
@@ -59,19 +57,41 @@ const setup = async function(callback) {
   await nightmare.end()
 }
 
-const init = async function() {
-  const username = await prompt('OpenAir username: ')
-  const password = await prompt('OpenAir password: ')
-  await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`].join("\n"))
+const Commands = {
+  init: async function() {
+    const { username, password } = await inquirer.prompt([
+      { type: 'input', message: 'OpenAir username', name: 'username' },
+      { type: 'password', message: 'OpenAir password', name: 'password' },
+    ])
+    return await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`, ''].join("\n"))
+  },
+  list: async function() {
+    return await setup(async function(nightmare: Nightmare) {
+      const timesheets = await listTimesheets(nightmare);
+      console.log(formatTimesheets(timesheets));
+    })
+  },
+  repl: async function() {
+    while (true) {
+      const { program } = await inquirer.prompt([{ type: 'input', message: '$', name: 'program' }])
+      console.log(program);
+    }
+  }
 }
+
+const runCommand = (command) => {
+  command().then(() => {}).catch(console.error)
+};
 
 const main = () => {
   yargs.command('$0', 'an OpenAir domain-specific language', () => {}, () => {
     console.log('try the help command')
   }).command(
-    'init', 'run this once in a directory you like', () => {}, init
+    'init', 'run this once in a directory you like', () => {}, () => runCommand(Commands.init)
   ).command(
-    'list', 'list open timesheets', () => {}, () => setup(listTimesheets).then(() => {}).catch(console.error)
+    'list', 'list open timesheets', () => {}, () => runCommand(Commands.list)
+  ).command(
+    'repl', 'read! evaluate! print! uh... what was that last one', () => {}, () => runCommand(Commands.repl)
   ).help().argv
 }
 

@@ -18,9 +18,9 @@
     "eslint-plugin-flowtype": "2.29.1",
     "eslint-plugin-flowtype-errors": "3.3.7",
     "flow-bin": "0.63.1",
+    "inquirer": "5.0.1",
     "mz": "2.7.0",
     "nightmare": "2.10.0",
-    "password-prompt": "1.0.4",
     "tty-table": "2.5.5",
     "yargs": "10.1.1"
   },
