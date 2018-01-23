@@ -8,37 +8,9 @@ import Nightmare from 'nightmare';
 import fs from 'mz/fs';
 import yargs from 'yargs';
 
-import { formatTimesheets } from './util';
+import { formatTimesheets, formatTimes } from './util';
 import { Timesheet } from './types';
-
-const AUTH_URL = 'https://www.openair.com/index.pl';
-
-const auth = async function(nightmare: Nightmare, company: string, user: string, pass: string): Promise<void> {
-  await nightmare
-    .goto(AUTH_URL)
-    .wait('#input_company')
-    .insert('#input_company', company)
-    .insert('#input_user', user)
-    .insert('#input_password', pass)
-    .click('#oa_comp_login_submit')
-  console.log('auth: logging in')
-  await nightmare.wait('body.dashboard')
-  console.log('auth: logged in')
-}
-
-const listTimesheets = async function(nightmare: Nightmare): Promise<Timesheet[]> {
-  return await nightmare
-    .click('.nav_modules a[href*="ta"]')
-    .wait('.nav_active a[href*="open"]')
-    .click('.nav_active a[href*="open"]')
-    .wait('.active a[href*="open"]')
-    .evaluate((): Timesheet[] =>
-      Array.from(document.querySelectorAll('tbody [name="rowWithAnchors"].listLight')).map(row => {
-        const [,, start, name, user, hours, ...rest] = Array.from(row.children).map(x => x.textContent.trim())
-        return { start, name, user, hours };
-      })
-    )
-}
+import * as robot from './robot';
 
 const setup = async function(callback) {
   dotenv.load()
@@ -52,7 +24,7 @@ const setup = async function(callback) {
     throw new Error('setup: no "PASSWORD" found in process env')
   }
 
-  await auth(nightmare, process.env.BURP_COMPANY || 'Originate', process.env.BURP_USER, process.env.BURP_PASS)
+  await robot.auth(nightmare, process.env.BURP_COMPANY || 'Originate', process.env.BURP_USER, process.env.BURP_PASS)
   await callback(nightmare)
   await nightmare.end()
 }
@@ -65,16 +37,36 @@ const Commands = {
     ])
     return await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`, ''].join("\n"))
   },
+
   list: async function() {
     return await setup(async function(nightmare: Nightmare) {
-      const timesheets = await listTimesheets(nightmare);
+      const timesheets = await robot.timesheets(nightmare);
       console.log(formatTimesheets(timesheets));
     })
   },
+
   repl: async function() {
     while (true) {
       const { program } = await inquirer.prompt([{ type: 'input', message: '$', name: 'program' }])
-      console.log(program);
+      const [head, ...rest] = program.split(' ')
+      switch (head) {
+        case 'list': {
+          await Commands.list()
+          break
+        }
+        case 'focus': {
+          const needle = rest[0]
+          await setup(async function(nightmare: Nightmare) {
+            const sheet = await robot.times(nightmare, needle)
+            console.log(formatTimes(sheet))
+          })
+          break
+        }
+        default: {
+          console.warn('i do not recognize your program')
+          break
+        }
+      }
     }
   }
 }
