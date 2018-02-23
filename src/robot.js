@@ -28,6 +28,23 @@ export const auth = async function(nightmare: Nightmare, company: string, user: 
   console.log('auth: logged in')
 }
 
+const delay = function(duration) {
+  return new Promise(function(resolve, reject) {
+    setTimeout(function() {
+      resolve()
+    }, duration)
+  })
+}
+
+export const newTimesheet = async function(nightmare: Nightmare): Promise<void> {
+  return await nightmare
+    .click('#oa3_toolbox_create_new')
+    .wait('#oa3_global_create_new a[href^="timesheet.pl"]')
+    .click('#oa3_global_create_new a[href^="timesheet.pl"]')
+    .wait('#formButtonsBottom input[type="submit"]')
+    .click('#formButtonsBottom input[type="submit"]')
+}
+
 export const timesheets = async function(nightmare: Nightmare): Promise<Timesheet[]> {
   return await nightmare
     .click('.nav_modules a[href*="ta"]')

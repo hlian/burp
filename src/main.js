@@ -38,6 +38,12 @@ const Commands = {
     return await fs.writeFile('.env', [`BURP_USER=${username}`, `BURP_PASS=${password}`, ''].join('\n'))
   },
 
+  new: async function() {
+    return await setup(async function(nightmare: Nightmare) {
+      await robot.newTimesheet(nightmare)
+    })
+  },
+
   list: async function() {
     return await setup(async function(nightmare: Nightmare) {
       const timesheets = await robot.timesheets(nightmare)
@@ -52,6 +58,10 @@ const Commands = {
       switch (head) {
         case 'list': {
           await Commands.list()
+          break
+        }
+        case 'new': {
+          await Commands.new()
           break
         }
         case 'focus': {
