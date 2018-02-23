@@ -12,7 +12,7 @@ import { formatTimesheets, formatTimes } from './util'
 import { Timesheet } from './types'
 import * as robot from './robot'
 
-const setup = async function(callback) {
+const setup = async function(callback: Nightmare => Promise<void>) {
   dotenv.load()
 
   const nightmare = Nightmare({ show: process.env.BURP_SHOW || false })
