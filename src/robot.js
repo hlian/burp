@@ -54,7 +54,7 @@ export const timesheets = async function(nightmare: Nightmare): Promise<Timeshee
     .evaluate((sel: string): Timesheet[] => {
       return Array.from(document.querySelectorAll(sel)).map(row => {
         const [, , start, name, user, hours, ...rest] = Array.from(row.children).map(x => x.textContent.trim())
-        return { start, name, user, hours }
+        return { start, name, hours }
       })
     }, TIMESHEETS_SELECTOR)
 }
